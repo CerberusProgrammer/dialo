@@ -16,7 +16,7 @@ class MainApp extends StatelessWidget {
         body: Center(
           child: Stack(
             children: [
-              const Expanded(child: InteractivePanel()),
+              const InteractivePanel(),
               Align(
                 alignment: Alignment.topCenter,
                 child: Padding(
