@@ -1,4 +1,4 @@
-import 'package:dialo/interactiveviewer.dart';
+import 'package:dialo/interactivepanel.dart';
 import 'package:flutter/material.dart';
 
 void main() {
