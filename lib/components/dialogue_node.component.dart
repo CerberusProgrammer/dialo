@@ -2,18 +2,27 @@ import 'package:flutter/material.dart';
 
 class DialogueNodeComponent extends StatelessWidget {
   final VoidCallback onTap;
+  final VoidCallback onAdd;
   final bool isFocused;
+  final Offset position;
+  final Function(Offset) onDrag;
 
   const DialogueNodeComponent({
     super.key,
     required this.onTap,
+    required this.onAdd,
     required this.isFocused,
+    required this.position,
+    required this.onDrag,
   });
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
+      onPanUpdate: (details) {
+        onDrag(details.delta);
+      },
       child: Container(
         padding: const EdgeInsets.symmetric(
           horizontal: 20,
@@ -34,11 +43,11 @@ class DialogueNodeComponent extends StatelessWidget {
                 offset: const Offset(2, 3),
               ),
             ]),
-        child: const Column(
+        child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            Row(
+            const Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 CircleAvatar(
@@ -54,7 +63,11 @@ class DialogueNodeComponent extends StatelessWidget {
                   ),
                 ),
               ],
-            )
+            ),
+            IconButton(
+              icon: const Icon(Icons.add),
+              onPressed: onAdd,
+            ),
           ],
         ),
       ),
