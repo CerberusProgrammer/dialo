@@ -32,14 +32,17 @@ class InteractiveViewerWidget extends StatefulWidget {
 class _InteractiveViewerWidgetState extends State<InteractiveViewerWidget> {
   final TransformationController _transformationController =
       TransformationController();
-  bool _isFocused = false;
   final FocusNode _focusNode = FocusNode();
+  final List<DialogueNodeComponent> _nodes = [];
+  final List<Offset> _positions = [];
+  int? _focusedIndex;
 
   @override
   void initState() {
     super.initState();
     _transformationController.addListener(_onTransformationChanged);
     _focusNode.addListener(_onFocusChange);
+    _addNode(const Offset(200, 200));
   }
 
   @override
@@ -62,23 +65,45 @@ class _InteractiveViewerWidgetState extends State<InteractiveViewerWidget> {
   void _onFocusChange() {
     if (!_focusNode.hasFocus) {
       setState(() {
-        _isFocused = false;
+        _focusedIndex = null;
       });
     }
   }
 
-  void _handleTap() {
+  void _handleTap(int index) {
     setState(() {
-      _isFocused = true;
+      _focusedIndex = index;
     });
   }
 
   void _handleOutsideTap() {
-    if (_isFocused) {
+    if (_focusedIndex != null) {
       setState(() {
-        _isFocused = false;
+        _focusedIndex = null;
       });
     }
+  }
+
+  void _addNode(Offset position) {
+    setState(() {
+      _positions.add(position);
+      _nodes.add(
+        DialogueNodeComponent(
+          onTap: () => _handleTap(_nodes.length),
+          onAdd: () => _addNode(position + const Offset(0, 150)),
+          isFocused: false,
+          position: position,
+          onDrag: (newPosition) =>
+              _updatePosition(_nodes.length - 1, newPosition),
+        ),
+      );
+    });
+  }
+
+  void _updatePosition(int index, Offset delta) {
+    setState(() {
+      _positions[index] += delta;
+    });
   }
 
   @override
@@ -90,32 +115,38 @@ class _InteractiveViewerWidgetState extends State<InteractiveViewerWidget> {
         autofocus: true,
         child: InteractiveViewer(
           constrained: false,
-          boundaryMargin: const EdgeInsets.all(double.infinity),
+          boundaryMargin: const EdgeInsets.all(0),
           minScale: 0.1,
           maxScale: 5.0,
           transformationController: _transformationController,
           onInteractionUpdate: _onInteractionUpdate,
           onInteractionEnd: _onInteractionEnd,
           child: SizedBox(
-            width: 2000,
-            height: 2000,
+            width: 5000,
+            height: 5000,
             child: Stack(
-              children: [
-                Positioned(
-                  left: 200,
-                  top: 200,
+              children: _nodes.asMap().entries.map((entry) {
+                int index = entry.key;
+                Offset position = _positions[index];
+                return Positioned(
+                  left: position.dx,
+                  top: position.dy,
                   child: GestureDetector(
                     onTap: () {
-                      _handleTap();
+                      _handleTap(index);
                       _focusNode.requestFocus();
                     },
                     child: DialogueNodeComponent(
-                      onTap: _handleTap,
-                      isFocused: _isFocused,
+                      onTap: () => _handleTap(index),
+                      onAdd: () => _addNode(position + const Offset(0, 150)),
+                      isFocused: _focusedIndex == index,
+                      position: position,
+                      onDrag: (newPosition) =>
+                          _updatePosition(index, newPosition),
                     ),
                   ),
-                ),
-              ],
+                );
+              }).toList(),
             ),
           ),
         ),
