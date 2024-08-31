@@ -35,6 +35,7 @@ class _InteractiveViewerWidgetState extends State<InteractiveViewerWidget> {
   final FocusNode _focusNode = FocusNode();
   final List<DialogueNodeComponent> _nodes = [];
   final List<Offset> _positions = [];
+  final List<MapEntry<int, int>> _connections = [];
   int? _focusedIndex;
 
   @override
@@ -84,19 +85,23 @@ class _InteractiveViewerWidgetState extends State<InteractiveViewerWidget> {
     }
   }
 
-  void _addNode(Offset position) {
+  void _addNode(Offset position, [int? parentIndex]) {
     setState(() {
       _positions.add(position);
       _nodes.add(
         DialogueNodeComponent(
           onTap: () => _handleTap(_nodes.length),
-          onAdd: () => _addNode(position + const Offset(0, 150)),
+          onAdd: () =>
+              _addNode(position + const Offset(0, 150), _nodes.length - 1),
           isFocused: false,
           position: position,
           onDrag: (newPosition) =>
               _updatePosition(_nodes.length - 1, newPosition),
         ),
       );
+      if (parentIndex != null) {
+        _connections.add(MapEntry(parentIndex, _nodes.length - 1));
+      }
     });
   }
 
@@ -125,32 +130,65 @@ class _InteractiveViewerWidgetState extends State<InteractiveViewerWidget> {
             width: 5000,
             height: 5000,
             child: Stack(
-              children: _nodes.asMap().entries.map((entry) {
-                int index = entry.key;
-                Offset position = _positions[index];
-                return Positioned(
-                  left: position.dx,
-                  top: position.dy,
-                  child: GestureDetector(
-                    onTap: () {
-                      _handleTap(index);
-                      _focusNode.requestFocus();
-                    },
-                    child: DialogueNodeComponent(
-                      onTap: () => _handleTap(index),
-                      onAdd: () => _addNode(position + const Offset(0, 150)),
-                      isFocused: _focusedIndex == index,
-                      position: position,
-                      onDrag: (newPosition) =>
-                          _updatePosition(index, newPosition),
+              children: [
+                CustomPaint(
+                  size: Size(5000, 5000),
+                  painter: ConnectionPainter(_positions, _connections),
+                ),
+                ..._nodes.asMap().entries.map((entry) {
+                  int index = entry.key;
+                  Offset position = _positions[index];
+                  return Positioned(
+                    left: position.dx,
+                    top: position.dy,
+                    child: GestureDetector(
+                      onTap: () {
+                        _handleTap(index);
+                        _focusNode.requestFocus();
+                      },
+                      child: DialogueNodeComponent(
+                        onTap: () => _handleTap(index),
+                        onAdd: () =>
+                            _addNode(position + const Offset(0, 150), index),
+                        isFocused: _focusedIndex == index,
+                        position: position,
+                        onDrag: (newPosition) =>
+                            _updatePosition(index, newPosition),
+                      ),
                     ),
-                  ),
-                );
-              }).toList(),
+                  );
+                }).toList(),
+              ],
             ),
           ),
         ),
       ),
     );
+  }
+}
+
+class ConnectionPainter extends CustomPainter {
+  final List<Offset> positions;
+  final List<MapEntry<int, int>> connections;
+
+  ConnectionPainter(this.positions, this.connections);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = Colors.black
+      ..strokeWidth = 2
+      ..style = PaintingStyle.stroke;
+
+    for (var connection in connections) {
+      final start = positions[connection.key];
+      final end = positions[connection.value];
+      canvas.drawLine(start, end, paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) {
+    return true;
   }
 }
