@@ -101,8 +101,8 @@ class _InteractivePanelState extends State<InteractivePanel> {
         child: InteractiveViewer(
           constrained: false,
           boundaryMargin: const EdgeInsets.all(0),
-          minScale: 0.1,
-          maxScale: 5.0,
+          minScale: 0.5,
+          maxScale: 1.0,
           transformationController: _transformationController,
           onInteractionUpdate: _onInteractionUpdate,
           onInteractionEnd: _onInteractionEnd,
