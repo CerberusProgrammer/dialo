@@ -22,7 +22,7 @@ class _InteractivePanelState extends State<InteractivePanel> {
     super.initState();
     _transformationController.addListener(_onTransformationChanged);
     _focusNode.addListener(_onFocusChange);
-    _addNode(const Offset(200, 200));
+    _addNode(const Offset(210, 210));
   }
 
   @override
@@ -141,48 +141,35 @@ class _InteractivePanelState extends State<InteractivePanel> {
                   return Positioned(
                     left: position.dx,
                     top: position.dy,
-                    child: Row(
-                      children: [
-                        GestureDetector(
-                          onPanStart: (details) {
-                            setState(() {
-                              _dragPoints = [
-                                _transformationController
-                                    .toScene(details.localPosition + position)
-                              ];
-                              _dragStartNodeIndex = index;
-                            });
-                          },
-                          onPanUpdate: (details) {
-                            setState(() {
-                              _dragPoints.add(_transformationController
-                                  .toScene(details.localPosition + position));
-                            });
-                          },
-                          onPanEnd: (details) {
-                            _onInteractionEnd(ScaleEndDetails());
-                          },
-                          child: Container(
-                            width: 20,
-                            height: 20,
-                            decoration: BoxDecoration(
-                              color: Colors.blue,
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                        ),
-                        DialogueNodeComponent(
-                          onTap: () => _handleTap(index),
-                          onAdd: () =>
-                              _addNode(position + const Offset(0, 150), index),
-                          isFocused: _focusedIndex == index,
-                          position: position,
-                          onDrag: (newPosition) {
-                            _updatePosition(index, newPosition);
-                            _updateDragPoints(index);
-                          },
-                        ),
-                      ],
+                    child: DialogueNodeComponent(
+                      onTap: () => _handleTap(index),
+                      onAdd: () =>
+                          _addNode(position + const Offset(0, 150), index),
+                      isFocused: _focusedIndex == index,
+                      position: position,
+                      onDrag: (newPosition) {
+                        _updatePosition(index, newPosition);
+                        _updateDragPoints(index);
+                      },
+                      onPanStart: (details) {
+                        setState(() {
+                          _dragPoints = [
+                            _transformationController
+                                .toScene(details.localPosition + position)
+                          ];
+                          _dragStartNodeIndex = index;
+                        });
+                      },
+                      onPanUpdate: (details) {
+                        setState(() {
+                          _dragPoints.add(_transformationController
+                              .toScene(details.localPosition + position));
+                        });
+                      },
+                      onPanEnd: (details) {
+                        _onInteractionEnd(ScaleEndDetails());
+                      },
+                      bluePoint: position + const Offset(10, 10),
                     ),
                   );
                 }),
@@ -263,6 +250,10 @@ class DialogueNodeComponent extends StatelessWidget {
   final bool isFocused;
   final Offset position;
   final ValueChanged<Offset> onDrag;
+  final GestureDragStartCallback onPanStart;
+  final GestureDragUpdateCallback onPanUpdate;
+  final GestureDragEndCallback onPanEnd;
+  final Offset bluePoint;
 
   const DialogueNodeComponent({
     required this.onTap,
@@ -270,36 +261,58 @@ class DialogueNodeComponent extends StatelessWidget {
     required this.isFocused,
     required this.position,
     required this.onDrag,
+    required this.onPanStart,
+    required this.onPanUpdate,
+    required this.onPanEnd,
+    required this.bluePoint,
     Key? key,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      onPanUpdate: (details) {
-        onDrag(details.delta);
-      },
-      child: Container(
-        width: 200,
-        height: 100,
-        decoration: BoxDecoration(
-          color: isFocused ? Colors.yellow : Colors.grey,
-          border: Border.all(color: Colors.black),
-        ),
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Text('Node'),
-              IconButton(
-                icon: const Icon(Icons.add),
-                onPressed: onAdd,
-              ),
-            ],
+    return Row(
+      children: [
+        GestureDetector(
+          onPanStart: onPanStart,
+          onPanUpdate: onPanUpdate,
+          onPanEnd: onPanEnd,
+          child: Container(
+            width: 20,
+            height: 20,
+            decoration: BoxDecoration(
+              color: Colors.blue,
+              shape: BoxShape.circle,
+            ),
           ),
         ),
-      ),
+        GestureDetector(
+          onTap: onTap,
+          onPanUpdate: (details) {
+            onDrag(details.delta);
+          },
+          child: Container(
+            width: 200,
+            height: 100,
+            decoration: BoxDecoration(
+              color: isFocused ? Colors.yellow : Colors.grey,
+              border: Border.all(color: Colors.black),
+            ),
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                      '(${bluePoint.dx.toStringAsFixed(2)}, ${bluePoint.dy.toStringAsFixed(2)})'),
+                  IconButton(
+                    icon: const Icon(Icons.add),
+                    onPressed: onAdd,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
