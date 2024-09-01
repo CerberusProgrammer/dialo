@@ -17,22 +17,22 @@ class MainApp extends StatelessWidget {
           child: Stack(
             children: [
               const InteractivePanel(),
-              Align(
-                alignment: Alignment.topCenter,
-                child: Padding(
-                  padding: const EdgeInsets.only(top: 8),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      ElevatedButton(
-                        onPressed: () {},
-                        child: const Text('Add Node'),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+              // Align(
+              //   alignment: Alignment.topCenter,
+              //   child: Padding(
+              //     padding: const EdgeInsets.only(top: 8),
+              //     child: Row(
+              //       mainAxisSize: MainAxisSize.min,
+              //       crossAxisAlignment: CrossAxisAlignment.center,
+              //       children: [
+              //         ElevatedButton(
+              //           onPressed: () {},
+              //           child: const Text('Add Node'),
+              //         ),
+              //       ],
+              //     ),
+              //   ),
+              // ),
             ],
           ),
         ),
