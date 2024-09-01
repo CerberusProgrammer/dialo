@@ -16,6 +16,8 @@ class _InteractivePanelState extends State<InteractivePanel> {
   int? _focusedIndex;
   List<Offset> _dragPoints = [];
   int? _dragStartNodeIndex;
+  Size _viewersize = Size.zero;
+  Offset _viewerPosition = Offset.zero;
 
   @override
   void initState() {
@@ -34,7 +36,11 @@ class _InteractivePanelState extends State<InteractivePanel> {
     super.dispose();
   }
 
-  void _onTransformationChanged() {}
+  void _onTransformationChanged() {
+    setState(() {
+      _viewerPosition = _transformationController.toScene(Offset.zero);
+    });
+  }
 
   void _onInteractionUpdate(ScaleUpdateDetails details) {
     setState(() {
@@ -107,77 +113,105 @@ class _InteractivePanelState extends State<InteractivePanel> {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: _handleOutsideTap,
-      child: Focus(
-        focusNode: _focusNode,
-        autofocus: true,
-        child: InteractiveViewer(
-          constrained: false,
-          boundaryMargin: const EdgeInsets.all(0),
-          minScale: 0.5,
-          maxScale: 1.0,
-          transformationController: _transformationController,
-          onInteractionUpdate: _onInteractionUpdate,
-          onInteractionEnd: _onInteractionEnd,
-          child: SizedBox(
-            width: 5000,
-            height: 5000,
-            child: Stack(
-              children: [
-                CustomPaint(
-                  size: const Size(2000, 2000),
-                  painter: ConnectionPainter(_positions, _connections,
-                      nodeWidth: 200, nodeHeight: 100),
-                ),
-                if (_dragPoints.isNotEmpty)
-                  CustomPaint(
-                    size: const Size(2000, 2000),
-                    painter: _InProgressConnectionPainter(_dragPoints),
+    return Stack(
+      children: [
+        GestureDetector(
+          onTap: _handleOutsideTap,
+          child: Focus(
+            focusNode: _focusNode,
+            autofocus: true,
+            child: LayoutBuilder(builder: (context, constraints) {
+              _viewersize = Size(constraints.maxWidth, constraints.maxHeight);
+              return InteractiveViewer(
+                constrained: false,
+                boundaryMargin: const EdgeInsets.all(0),
+                minScale: 0.5,
+                maxScale: 1.0,
+                transformationController: _transformationController,
+                onInteractionUpdate: _onInteractionUpdate,
+                onInteractionEnd: _onInteractionEnd,
+                child: SizedBox(
+                  width: 5000,
+                  height: 5000,
+                  child: Stack(
+                    children: [
+                      CustomPaint(
+                        size: const Size(2000, 2000),
+                        painter: ConnectionPainter(_positions, _connections,
+                            nodeWidth: 200, nodeHeight: 100),
+                      ),
+                      if (_dragPoints.isNotEmpty)
+                        CustomPaint(
+                          size: const Size(2000, 2000),
+                          painter: _InProgressConnectionPainter(_dragPoints),
+                        ),
+                      ..._positions.asMap().entries.map((entry) {
+                        int index = entry.key;
+                        Offset position = entry.value;
+                        return Positioned(
+                          left: position.dx,
+                          top: position.dy,
+                          child: DialogueNodeComponent(
+                            onTap: () => _handleTap(index),
+                            onAdd: () => _addNode(
+                                position + const Offset(0, 150), index),
+                            isFocused: _focusedIndex == index,
+                            position: position,
+                            onDrag: (newPosition) {
+                              _updatePosition(index, newPosition);
+                              _updateDragPoints(index);
+                            },
+                            onPanStart: (details) {
+                              setState(() {
+                                _dragPoints = [
+                                  _transformationController.toScene(position)
+                                ];
+                                _dragStartNodeIndex = index;
+                              });
+                            },
+                            onPanUpdate: (details) {
+                              setState(() {
+                                _dragPoints.add(_transformationController
+                                    .toScene(details.localPosition + position));
+                              });
+                            },
+                            onPanEnd: (details) {
+                              _onInteractionEnd(ScaleEndDetails());
+                            },
+                            bluePoint: position,
+                          ),
+                        );
+                      }),
+                    ],
                   ),
-                ..._positions.asMap().entries.map((entry) {
-                  int index = entry.key;
-                  Offset position = entry.value;
-                  return Positioned(
-                    left: position.dx,
-                    top: position.dy,
-                    child: DialogueNodeComponent(
-                      onTap: () => _handleTap(index),
-                      onAdd: () =>
-                          _addNode(position + const Offset(0, 150), index),
-                      isFocused: _focusedIndex == index,
-                      position: position,
-                      onDrag: (newPosition) {
-                        _updatePosition(index, newPosition);
-                        _updateDragPoints(index);
-                      },
-                      onPanStart: (details) {
-                        setState(() {
-                          _dragPoints = [
-                            _transformationController
-                                .toScene(details.localPosition + position)
-                          ];
-                          _dragStartNodeIndex = index;
-                        });
-                      },
-                      onPanUpdate: (details) {
-                        setState(() {
-                          _dragPoints.add(_transformationController
-                              .toScene(details.localPosition + position));
-                        });
-                      },
-                      onPanEnd: (details) {
-                        _onInteractionEnd(ScaleEndDetails());
-                      },
-                      bluePoint: position + const Offset(10, 10),
-                    ),
-                  );
-                }),
-              ],
+                ),
+              );
+            }),
+          ),
+        ),
+        Align(
+          alignment: Alignment.topLeft,
+          child: ElevatedButton(
+            onPressed: () {
+              _addNode(const Offset(210, 210));
+            },
+            child: const Text('Add Node'),
+          ),
+        ),
+        Positioned(
+          top: 10,
+          left: 10,
+          child: Container(
+            color: Colors.white,
+            padding: const EdgeInsets.all(8.0),
+            child: Text(
+              'Size: ${_viewersize.width.toStringAsFixed(2)} x ${_viewersize.height.toStringAsFixed(2)}, '
+              'Position: (${_viewerPosition.dx.toStringAsFixed(2)}, ${_viewerPosition.dy.toStringAsFixed(2)})',
+              style: const TextStyle(fontSize: 16),
             ),
           ),
         ),
-      ),
+      ],
     );
   }
 
@@ -302,7 +336,9 @@ class DialogueNodeComponent extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                      '(${bluePoint.dx.toStringAsFixed(2)}, ${bluePoint.dy.toStringAsFixed(2)})'),
+                      '(Blue Position: ${bluePoint.dx.toStringAsFixed(2)}, ${bluePoint.dy.toStringAsFixed(2)})'),
+                  Text(
+                      'Position: (${position.dx.toStringAsFixed(2)}, ${position.dy.toStringAsFixed(2)})'),
                   IconButton(
                     icon: const Icon(Icons.add),
                     onPressed: onAdd,
