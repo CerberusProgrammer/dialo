@@ -1,16 +1,10 @@
 import 'package:flutter/material.dart';
 
-void main() {
-  runApp(MyApp());
-}
+void main() => runApp(MyApp());
 
 class MyApp extends StatelessWidget {
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      home: InfiniteCanvas(),
-    );
-  }
+  Widget build(context) => MaterialApp(home: InfiniteCanvas());
 }
 
 class InfiniteCanvas extends StatefulWidget {
@@ -69,7 +63,7 @@ class _InfiniteCanvasState extends State<InfiniteCanvas> {
 
   void _stopDrawing() {
     setState(() {
-      points.clear(); // Clear the points to remove the drawing
+      points.clear();
     });
   }
 
@@ -226,7 +220,5 @@ class LinePainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) {
-    return true;
-  }
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
 }
