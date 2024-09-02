@@ -19,7 +19,7 @@ class InfiniteCanvas extends StatefulWidget {
 }
 
 class _InfiniteCanvasState extends State<InfiniteCanvas> {
-  List<Widget> squares = [];
+  List<MovableSquare> squares = [];
   final ScrollController _horizontalController = ScrollController();
   final ScrollController _verticalController = ScrollController();
   double _currentX = 0;
@@ -38,23 +38,59 @@ class _InfiniteCanvasState extends State<InfiniteCanvas> {
         _currentY = _verticalController.offset;
       });
 
-  void _addSquare() => setState(() => squares.add(MovableSquare(
-        id: squares.length,
-        key: UniqueKey(),
-        initialPosition: Offset(
-          _currentX + MediaQuery.of(context).size.width / 2,
-          _currentY + MediaQuery.of(context).size.height / 2,
-        ),
-        onDrawStart: _startDrawing,
-        onDrawUpdate: _updateDrawing,
-        onDrawEnd: _stopDrawing,
-      )));
+  void _addSquare() => setState(() {
+        squares.add(MovableSquare(
+          id: squares.length,
+          key: UniqueKey(),
+          initialPosition: Offset(
+            _currentX + MediaQuery.of(context).size.width / 2,
+            _currentY + MediaQuery.of(context).size.height / 2,
+          ),
+          onDrawStart: _startDrawing,
+          onDrawUpdate: _updateDrawing,
+          onDrawEnd: _stopDrawing,
+        ));
+      });
 
   void _startDrawing(Offset position) => setState(() => points = [position]);
 
   void _updateDrawing(Offset position) => setState(() => points.add(position));
 
-  void _stopDrawing() => setState(() => points.clear());
+  void _stopDrawing() {
+    setState(() {
+      if (points.length > 1) {
+        Offset start = points.first;
+        Offset end = points.last;
+
+        MovableSquare? startSquare;
+        MovableSquare? endSquare;
+
+        for (var square in squares) {
+          if (_isPointInsideSquare(start, square)) {
+            startSquare = square;
+          }
+          if (_isPointInsideSquare(end, square)) {
+            endSquare = square;
+          }
+        }
+
+        if (startSquare != null &&
+            endSquare != null &&
+            startSquare != endSquare) {
+          startSquare.connections.add(endSquare);
+          endSquare.connections.add(startSquare);
+        }
+      }
+      points.clear();
+    });
+  }
+
+  bool _isPointInsideSquare(Offset point, MovableSquare square) {
+    return point.dx >= square.initialPosition.dx &&
+        point.dx <= square.initialPosition.dx + 100 &&
+        point.dy >= square.initialPosition.dy &&
+        point.dy <= square.initialPosition.dy + 100;
+  }
 
   @override
   void dispose() {
@@ -68,11 +104,13 @@ class _InfiniteCanvasState extends State<InfiniteCanvas> {
   @override
   Widget build(BuildContext context) => Scaffold(
         appBar: PreferredSize(
-            preferredSize: const Size(100, 100),
-            child: InteractiveAppbar(
-                currentX: _currentX,
-                currentY: _currentY,
-                addSquare: _addSquare)),
+          preferredSize: const Size(100, 100),
+          child: InteractiveAppbar(
+            currentX: _currentX,
+            currentY: _currentY,
+            addSquare: _addSquare,
+          ),
+        ),
         body: GestureDetector(
           onPanUpdate: (details) {
             _horizontalController
@@ -93,7 +131,7 @@ class _InfiniteCanvasState extends State<InfiniteCanvas> {
                   children: [
                     CustomPaint(
                       size: const Size(10000, 10000),
-                      painter: LinePainter(points),
+                      painter: LinePainter(points, squares),
                     ),
                     ...squares,
                   ],
@@ -107,8 +145,9 @@ class _InfiniteCanvasState extends State<InfiniteCanvas> {
 
 class LinePainter extends CustomPainter {
   final List<Offset> points;
+  final List<MovableSquare> squares;
 
-  LinePainter(this.points);
+  LinePainter(this.points, this.squares);
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -120,6 +159,16 @@ class LinePainter extends CustomPainter {
     for (int i = 0; i < points.length - 1; i++) {
       if (points[i] != Offset.zero && points[i + 1] != Offset.zero) {
         canvas.drawLine(points[i], points[i + 1], paint);
+      }
+    }
+
+    for (var square in squares) {
+      for (var connection in square.connections) {
+        canvas.drawLine(
+          square.initialPosition + Offset(50, 50),
+          connection.initialPosition + Offset(50, 50),
+          paint,
+        );
       }
     }
   }
