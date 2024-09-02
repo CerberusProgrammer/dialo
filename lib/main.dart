@@ -1,4 +1,4 @@
-import 'package:dialo/interactivepanel.dart';
+import 'package:dialo/interactive_screen/interactive_screen.dart';
 import 'package:flutter/material.dart';
 
 void main() {
@@ -16,7 +16,7 @@ class MainApp extends StatelessWidget {
         body: Center(
           child: Stack(
             children: [
-              const InteractivePanel(),
+              InfiniteCanvas(),
               // Align(
               //   alignment: Alignment.topCenter,
               //   child: Padding(
