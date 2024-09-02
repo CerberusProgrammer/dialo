@@ -2,14 +2,15 @@ import 'package:flutter/material.dart';
 
 class MovableSquare extends StatefulWidget {
   final int id;
-  final Offset initialPosition;
+  Offset initialPosition;
   final MovableSquare? movableSquareFather;
   final List<MovableSquare>? movableSquareChildren;
   final Function(Offset) onDrawStart;
   final Function(Offset) onDrawUpdate;
   final Function() onDrawEnd;
+  final List<MovableSquare> connections = [];
 
-  const MovableSquare({
+  MovableSquare({
     super.key,
     required this.initialPosition,
     required this.onDrawStart,
@@ -19,7 +20,6 @@ class MovableSquare extends StatefulWidget {
     this.movableSquareFather,
     this.movableSquareChildren,
   });
-
   @override
   State<MovableSquare> createState() => _MovableSquareState();
 }
@@ -44,11 +44,12 @@ class _MovableSquareState extends State<MovableSquare> {
                 setState(() {
                   position += details.delta;
                 });
+                widget.initialPosition = position;
               },
               child: Container(
                 width: 100,
                 height: 100,
-                color: Colors.greenAccent,
+                color: Colors.green,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -62,6 +63,10 @@ class _MovableSquareState extends State<MovableSquare> {
                     ),
                     Text(
                       '(${position.dx.toStringAsFixed(2)}, ${position.dy.toStringAsFixed(2)})',
+                      style: const TextStyle(color: Colors.white, fontSize: 12),
+                    ),
+                    Text(
+                      'Father: ${widget.connections.map((connection) => connection.id) ?? 'None'}',
                       style: const TextStyle(color: Colors.white, fontSize: 12),
                     ),
                   ],
@@ -78,7 +83,10 @@ class _MovableSquareState extends State<MovableSquare> {
               onPanUpdate: (details) => widget.onDrawUpdate(position +
                   Offset(100 + details.localPosition.dx,
                       40 + details.localPosition.dy)),
-              onPanEnd: (details) => widget.onDrawEnd(),
+              onPanEnd: (details) {
+                setState(() {});
+                widget.onDrawEnd();
+              },
               child: Container(
                 width: 20,
                 height: 20,
