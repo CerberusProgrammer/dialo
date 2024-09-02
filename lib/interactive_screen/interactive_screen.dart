@@ -66,43 +66,43 @@ class _InfiniteCanvasState extends State<InfiniteCanvas> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: PreferredSize(
-          preferredSize: const Size(100, 100),
-          child: InteractiveAppbar(
-              currentX: _currentX, currentY: _currentY, addSquare: _addSquare)),
-      body: GestureDetector(
-        onPanUpdate: (details) {
-          _horizontalController
-              .jumpTo(_horizontalController.offset - details.delta.dx);
-          _verticalController
-              .jumpTo(_verticalController.offset - details.delta.dy);
-        },
-        child: SingleChildScrollView(
-          controller: _horizontalController,
-          scrollDirection: Axis.horizontal,
+  Widget build(BuildContext context) => Scaffold(
+        appBar: PreferredSize(
+            preferredSize: const Size(100, 100),
+            child: InteractiveAppbar(
+                currentX: _currentX,
+                currentY: _currentY,
+                addSquare: _addSquare)),
+        body: GestureDetector(
+          onPanUpdate: (details) {
+            _horizontalController
+                .jumpTo(_horizontalController.offset - details.delta.dx);
+            _verticalController
+                .jumpTo(_verticalController.offset - details.delta.dy);
+          },
           child: SingleChildScrollView(
-            controller: _verticalController,
-            scrollDirection: Axis.vertical,
-            child: SizedBox(
-              width: 10000,
-              height: 10000,
-              child: Stack(
-                children: [
-                  CustomPaint(
-                    size: const Size(10000, 10000),
-                    painter: LinePainter(points),
-                  ),
-                  ...squares,
-                ],
+            controller: _horizontalController,
+            scrollDirection: Axis.horizontal,
+            child: SingleChildScrollView(
+              controller: _verticalController,
+              scrollDirection: Axis.vertical,
+              child: SizedBox(
+                width: 10000,
+                height: 10000,
+                child: Stack(
+                  children: [
+                    CustomPaint(
+                      size: const Size(10000, 10000),
+                      painter: LinePainter(points),
+                    ),
+                    ...squares,
+                  ],
+                ),
               ),
             ),
           ),
         ),
-      ),
-    );
-  }
+      );
 }
 
 class LinePainter extends CustomPainter {
