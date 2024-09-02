@@ -34,63 +34,61 @@ class _MovableSquareState extends State<MovableSquare> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        Positioned(
-          left: position.dx,
-          top: position.dy,
-          child: GestureDetector(
-            onPanUpdate: (details) {
-              setState(() {
-                position += details.delta;
-              });
-            },
-            child: Container(
-              width: 100,
-              height: 100,
-              color: Colors.greenAccent,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    'Square ${widget.id}',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
+  Widget build(BuildContext context) => Stack(
+        children: [
+          Positioned(
+            left: position.dx,
+            top: position.dy,
+            child: GestureDetector(
+              onPanUpdate: (details) {
+                setState(() {
+                  position += details.delta;
+                });
+              },
+              child: Container(
+                width: 100,
+                height: 100,
+                color: Colors.greenAccent,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      'Square ${widget.id}',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                  ),
-                  Text(
-                    '(${position.dx.toStringAsFixed(2)}, ${position.dy.toStringAsFixed(2)})',
-                    style: const TextStyle(color: Colors.white, fontSize: 12),
-                  ),
-                ],
+                    Text(
+                      '(${position.dx.toStringAsFixed(2)}, ${position.dy.toStringAsFixed(2)})',
+                      style: const TextStyle(color: Colors.white, fontSize: 12),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
-        ),
-        Positioned(
-          left: position.dx + 100,
-          top: position.dy + 40,
-          child: GestureDetector(
-            onPanStart: (details) =>
-                widget.onDrawStart(position + const Offset(100, 40)),
-            onPanUpdate: (details) => widget.onDrawUpdate(position +
-                Offset(100 + details.localPosition.dx,
-                    40 + details.localPosition.dy)),
-            onPanEnd: (details) => widget.onDrawEnd(),
-            child: Container(
-              width: 20,
-              height: 20,
-              decoration: const BoxDecoration(
-                color: Colors.red,
-                shape: BoxShape.circle,
+          Positioned(
+            left: position.dx + 100,
+            top: position.dy + 40,
+            child: GestureDetector(
+              onPanStart: (details) =>
+                  widget.onDrawStart(position + const Offset(100, 40)),
+              onPanUpdate: (details) => widget.onDrawUpdate(position +
+                  Offset(100 + details.localPosition.dx,
+                      40 + details.localPosition.dy)),
+              onPanEnd: (details) => widget.onDrawEnd(),
+              child: Container(
+                width: 20,
+                height: 20,
+                decoration: const BoxDecoration(
+                  color: Colors.red,
+                  shape: BoxShape.circle,
+                ),
               ),
             ),
           ),
-        ),
-      ],
-    );
-  }
+        ],
+      );
 }
