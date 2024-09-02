@@ -12,13 +12,17 @@ class InteractiveAppbar extends StatelessWidget {
   final void Function() addSquare;
 
   @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.start,
-      children: [
-        Text('Position: ${currentX.toInt()}px x ${currentY.toInt()}px'),
-        IconButton(icon: const Icon(Icons.add, size: 10), onPressed: addSquare)
-      ],
-    );
-  }
+  Widget build(BuildContext context) => Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Row(
+            children: [
+              Text('Position: ${currentX.toInt()}px x ${currentY.toInt()}px'),
+              IconButton(
+                  icon: const Icon(Icons.add, size: 10), onPressed: addSquare),
+            ],
+          )
+        ],
+      );
 }
